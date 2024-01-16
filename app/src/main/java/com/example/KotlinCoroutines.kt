@@ -29,7 +29,12 @@ fun main() { //Executing in main thread
     println("Main program ends: ${Thread.currentThread().name}")*/
     runBlocking {
         println("Program starts here:${Thread.currentThread().name}")
-        GlobalScope.launch {
+//        GlobalScope.launch {
+//            println("Job 1 started here:${Thread.currentThread().name}")
+//            delay(1000)
+//            println("Job 1 ends here:${Thread.currentThread().name}")
+//        }
+        launch {// coroutine is launched in it's main thread scope and that's why it inherits the scop of parent coroutine
             println("Job 1 started here:${Thread.currentThread().name}")
             delay(1000)
             println("Job 1 ends here:${Thread.currentThread().name}")
