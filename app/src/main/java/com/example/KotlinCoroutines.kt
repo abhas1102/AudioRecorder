@@ -1,6 +1,9 @@
 package com.example
 
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -34,13 +37,24 @@ fun main() { //Executing in main thread
 //            delay(1000)
 //            println("Job 1 ends here:${Thread.currentThread().name}")
 //        }
-        launch {// coroutine is launched in it's main thread scope and that's why it inherits the scop of parent coroutine
+       /*val job:Job = launch {// coroutine is launched in it's main thread scope and that's why it inherits the scop of parent coroutine
             println("Job 1 started here:${Thread.currentThread().name}")
             delay(1000)
             println("Job 1 ends here:${Thread.currentThread().name}")
         }
-        delay(2000)
+        job.join()*/
+
+        //Async coroutine builder
+        val jobDeferred:Deferred<Int> = async {
+            println("Job 1 started here:${Thread.currentThread().name}")
+            delay(1000)
+            println("Job 1 ends here:${Thread.currentThread().name}")
+            15
+        }
+        jobDeferred.await()
+
         println("Program ends here:${Thread.currentThread().name}")
     }
+
 
 }
