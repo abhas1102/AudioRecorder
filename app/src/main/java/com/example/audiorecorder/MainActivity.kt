@@ -2,13 +2,16 @@ package com.example.audiorecorder
 
 import android.Manifest
 import android.Manifest.permission
+import android.content.Context
 import android.content.ContextWrapper
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -22,7 +25,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
@@ -47,6 +52,21 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer = MediaPlayer()
         mediaRecorder = MediaRecorder()
         setContentView(binding.root)
+        //Shared Preferences
+        /*val sharedPref = getSharedPreferences("myPref",0)
+        val editor = sharedPref.edit()
+        editor.putString("name","Abhas")*/
+
+        //Store files in internal storage
+        /*val fos:FileOutputStream = openFileOutput("hello_file",Context.MODE_PRIVATE)
+        fos.write("abhas is a good boy".toByteArray())
+        fos.close()
+
+        val readFile = openFileInput("hello_file")
+        readFile.read()
+        readFile.close()*/
+
+
         binding.record.setOnClickListener {
             if(checkRecordingPermission()) {
                 if (!isRecording) {
@@ -55,6 +75,7 @@ class MainActivity : AppCompatActivity() {
                         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
                         mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
                         mediaRecorder?.setOutputFile(getRecordingFilePath())
+                        path = getRecordingFilePath()
                         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
                         mediaRecorder?.prepare()
                         mediaRecorder?.start()
@@ -184,7 +205,7 @@ class MainActivity : AppCompatActivity() {
     fun getRecordingFilePath():String {
         val contextWrapper = ContextWrapper(applicationContext)
         val music = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        val file = File(music,"audiorecording")
+        val file = File(music,"audiorecording"+" .mp3")
         return file.path
 
     }
