@@ -3,10 +3,12 @@ package com.example
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
 
 fun main() { //Executing in main thread
@@ -37,7 +39,7 @@ fun main() { //Executing in main thread
 //            delay(1000)
 //            println("Job 1 ends here:${Thread.currentThread().name}")
 //        }
-       /*val job:Job = launch {// coroutine is launched in it's main thread scope and that's why it inherits the scop of parent coroutine
+        /*val job:Job = launch {// coroutine is launched in it's main thread scope and that's why it inherits the scop of parent coroutine
             println("Job 1 started here:${Thread.currentThread().name}")
             delay(1000)
             println("Job 1 ends here:${Thread.currentThread().name}")
@@ -45,7 +47,7 @@ fun main() { //Executing in main thread
         job.join()*/
 
         //Async coroutine builder
-        val jobDeferred:Deferred<Int> = async {
+        /*val jobDeferred:Deferred<Int> = async {
             println("Job 1 started here:${Thread.currentThread().name}")
             delay(1000)
             println("Job 1 ends here:${Thread.currentThread().name}")
@@ -53,6 +55,32 @@ fun main() { //Executing in main thread
         }
         jobDeferred.await()
 
+        println("Program ends here:${Thread.currentThread().name}")
+    }*/
+
+        val job:Job = launch {
+            try {
+                for (i in 0..500) {
+                    print(i)
+//                Thread.sleep(50) // This is not cooperative because this function doesn't belong to kotlin coroutine package
+                    delay(50) // This is cancellable and cooperative function because it belongs to kotlin coroutine package
+                }
+            } catch (e:Exception){
+                print("\nException caught safely")
+            } finally {
+                //We shouldn't run suspending function in finally block.
+                // But we can run it using withContext() function having parameter NonCancellable companion object
+                withContext(NonCancellable) {
+                    delay(1000)
+                    print("\nClose resources in finally")
+                }
+
+            }
+
+        }
+        delay(200)
+        job.cancel()
+        job.join()
         println("Program ends here:${Thread.currentThread().name}")
     }
 
