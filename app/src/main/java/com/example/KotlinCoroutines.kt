@@ -1,5 +1,7 @@
 package com.example
 
+import android.graphics.DashPathEffect
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -10,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
+import kotlin.system.measureTimeMillis
 
 fun main() { //Executing in main thread
 
@@ -33,7 +36,7 @@ fun main() { //Executing in main thread
 
     println("Main program ends: ${Thread.currentThread().name}")*/
     runBlocking {
-        println("Program starts here:${Thread.currentThread().name}")
+//        println("Program starts here:${Thread.currentThread().name}")
 //        GlobalScope.launch {
 //            println("Job 1 started here:${Thread.currentThread().name}")
 //            delay(1000)
@@ -58,7 +61,7 @@ fun main() { //Executing in main thread
         println("Program ends here:${Thread.currentThread().name}")
     }*/
 
-        val job:Job = launch {
+        /*val job:Job = launch {
             try {
                 for (i in 0..500) {
                     print(i)
@@ -81,8 +84,42 @@ fun main() { //Executing in main thread
         delay(200)
         job.cancel()
         job.join()
-        println("Program ends here:${Thread.currentThread().name}")
+        println("Program ends here:${Thread.currentThread().name}")*/
+
+        // By default there coroutines get executed sequntially
+        println("Program starts here:${Thread.currentThread().name}")
+        val time = measureTimeMillis {
+            /*val msg1 = getSuspendingFuction1()
+            val msg2 = getSuspendingFunction2()
+            println("The message is: ${msg1 + msg2}")*/
+
+            //This is concurrent execution of coroutines
+            /*val msg1:Deferred<String> = async { getSuspendingFuction1() }
+            val msg2:Deferred<String> = async { getSuspendingFunction2() }
+            println("The message is ${msg1.await() + msg2.await()}")*/
+
+            //Lazy execution of corutines - It will stop the execution of coroutine if there is no use of returned variables
+            val msg1:Deferred<String> = async(start = CoroutineStart.LAZY) {
+                getSuspendingFuction1()
+            }
+            val msg2:Deferred<String> = async(start = CoroutineStart.LAZY){
+                getSuspendingFunction2()
+            }
+            println("The message is: ${msg1.await() + msg2.await()}")
+
+        }
+        println(time)
+        println("Program ends here")
+
     }
 
 
+}
+suspend fun getSuspendingFuction1():String {
+    delay(1000)
+    return "First suspend function executed"
+}
+suspend fun getSuspendingFunction2():String {
+    delay(1000)
+    return "Second suspend function executed"
 }

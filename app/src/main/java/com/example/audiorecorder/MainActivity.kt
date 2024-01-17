@@ -40,8 +40,8 @@ class MainActivity : AppCompatActivity() {
     var isRecording = false
     var isPlaying = true
     var seconds = 0
-    var dummySeconds = 0
     var playableSeconds = 0
+    var dummySeconds = 0
     var path = ""
     private var timerJob: Job? = null
 
@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        mediaPlayer = MediaPlayer()
         mediaRecorder = MediaRecorder()
         setContentView(binding.root)
         //Shared Preferences
@@ -71,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             if(checkRecordingPermission()) {
                 if (!isRecording) {
                     isRecording = true
-                    GlobalScope.launch(Dispatchers.IO) {
+                    GlobalScope.launch {
                         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
                         mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
                         mediaRecorder?.setOutputFile(getRecordingFilePath())
@@ -79,6 +78,7 @@ class MainActivity : AppCompatActivity() {
                         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
                         mediaRecorder?.prepare()
                         mediaRecorder?.start()
+
                         withContext(Dispatchers.Main){
                             playableSeconds = 0
                             seconds = 0
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    GlobalScope.launch(Dispatchers.IO) {
+
                         mediaRecorder?.stop()
                         mediaRecorder?.release()
                         mediaRecorder =  null
@@ -96,31 +96,33 @@ class MainActivity : AppCompatActivity() {
                         dummySeconds = seconds
                         seconds = 0
                         isRecording = false
+                        binding.record.setImageDrawable(ContextCompat.getDrawable(this@MainActivity,R.drawable.ic_record))
+                        binding.path.visibility = View.VISIBLE
+                        binding.path.text = path
 
-                        withContext(Dispatchers.Main){
-                            binding.record.setImageDrawable(ContextCompat.getDrawable(this@MainActivity,R.drawable.ic_record))
-                        }
                     }
 
                 }
-            }
+
             else{
                 requestRecordingPermission()
             }
         }
 
         binding.playRecording.setOnClickListener {
+            mediaPlayer = MediaPlayer()
             if (!isPlaying){
                 if (path != null){
-                    mediaPlayer?.setDataSource(getRecordingFilePath())
+                    mediaPlayer?.setDataSource(path)
                 }
+
                 mediaPlayer?.prepare()
                 mediaPlayer?.start()
                 isPlaying = true
                 binding.playRecording.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.ic_pause))
                 binding.simpleBg.visibility = View.GONE
                 binding.playAnimation.visibility = View.VISIBLE
-                startTimer()
+//                startTimer()
 
             } else {
                 mediaPlayer?.stop()
@@ -138,27 +140,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startTimer() {
-        timerJob = CoroutineScope(Dispatchers.Main).launch {
+        timerJob = CoroutineScope(Dispatchers.Default).launch {
             while (isActive) {
                 runTimer()
                 delay(1000) // Delay for 1 second
             }
+            timerJob?.cancel()
         }
     }
 
-    fun stopTimer() {
-        timerJob?.cancel()
-    }
         fun runTimer() {
             val minutes = (seconds%3600)/60
             val secs = seconds%60
             val time = String.format(Locale.getDefault(),"%02d:%02d", minutes,secs)
-            binding.recordTime.text = time.toString()
 
-            if (isRecording || (isPlaying && playableSeconds != -1)){
+//            binding.recordTime.text = time
+            if (isRecording){
                 seconds++
-                playableSeconds--
-                if (playableSeconds == -1 && isPlaying){
+//                playableSeconds--
+                /*if (playableSeconds == -1 && isPlaying){
                     mediaPlayer?.stop()
                     mediaPlayer?.release()
                     mediaPlayer = null
@@ -169,8 +169,10 @@ class MainActivity : AppCompatActivity() {
                     binding.playAnimation.visibility = View.GONE
                     binding.playRecording.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.ic_play))
                     return
-                }
+                }*/
             }
+            binding.recordTime.text = time
+
 
         }
 
@@ -203,9 +205,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
     fun getRecordingFilePath():String {
-        val contextWrapper = ContextWrapper(applicationContext)
-        val music = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        val file = File(music,"audiorecording"+" .mp3")
+        val music = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val file = File(music,"audiorecording.mp3")
         return file.path
 
     }
